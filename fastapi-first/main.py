@@ -1,8 +1,8 @@
 import atexit
-import os.path
 from datetime import datetime, timedelta
 from fastapi import FastAPI, status, Query, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.encoders import jsonable_encoder
 from jose import JWTError, jwt
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -41,13 +41,8 @@ class UserDB(BaseModel):
 
 
 def save():
-    users_json = {"users": []}
-    for user in users:
-        users_json["users"].append({"login": user.login,
-                                    "password": user.hash_password,
-                                    "name": user.name})
     with open(DB_PATH, "w") as f:
-        json.dump(users_json, f, indent=2)
+        json.dump({"users": jsonable_encoder(users)}, f, indent=2)
 
 
 def load():
@@ -61,7 +56,7 @@ def load():
     if users_json:
         for user in users_json.get("users", []):
             users.append(UserDB(login=user.get("login"),
-                                hash_password=user.get("password"),
+                                hash_password=user.get("hash_password"),
                                 name=user.get("name", "Jone Dou")))
 
 
